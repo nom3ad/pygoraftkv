@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/raft"
-	"github.com/hashicorp/raft-boltdb"
+	raftboltdb "github.com/hashicorp/raft-boltdb"
 )
 
 const (
@@ -31,6 +31,12 @@ type command struct {
 	Op    string `json:"op,omitempty"`
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
+}
+
+type Peer struct {
+	ID   string `json:"id"`
+	Host string `json:"host"`
+	Port int    `json:"port"`
 }
 
 // Store is a simple key-value store, where all changes are made via Raft consensus.
@@ -59,12 +65,13 @@ func New(inmem bool) *Store {
 // Open opens the store. If enableSingle is set, and there are no existing peers,
 // then this node becomes the first node, and therefore leader, of the cluster.
 // localID should be the server identifier for this node.
-func (s *Store) Open(enableSingle bool, localID string) error {
+func (s *Store) Open(localID string, peers []Peer) error {
 	// Setup Raft configuration.
 	config := raft.DefaultConfig()
 	config.LocalID = raft.ServerID(localID)
 
 	// Setup Raft communication.
+
 	addr, err := net.ResolveTCPAddr("tcp", s.RaftBind)
 	if err != nil {
 		return err
@@ -73,6 +80,7 @@ func (s *Store) Open(enableSingle bool, localID string) error {
 	if err != nil {
 		return err
 	}
+	s.logger.Printf("Transport created %s   %s", localID, addr.String())
 
 	// Create the snapshot store. This allows the Raft to truncate the log.
 	snapshots, err := raft.NewFileSnapshotStore(s.RaftDir, retainSnapshotCount, os.Stderr)
@@ -102,17 +110,26 @@ func (s *Store) Open(enableSingle bool, localID string) error {
 	}
 	s.raft = ra
 
-	if enableSingle {
-		configuration := raft.Configuration{
-			Servers: []raft.Server{
-				{
-					ID:      config.LocalID,
-					Address: transport.LocalAddr(),
-				},
-			},
-		}
-		ra.BootstrapCluster(configuration)
+	var servers = []raft.Server{
+		{
+			ID:      config.LocalID,
+			Address: transport.LocalAddr(),
+		},
 	}
+	for _, p := range peers {
+		if raft.ServerID(p.ID) == config.LocalID {
+			continue
+		}
+		servers = append(servers, raft.Server{
+			ID:      raft.ServerID(p.ID),
+			Address: raft.ServerAddress(fmt.Sprintf("%s:%d", p.Host, p.Port)),
+		})
+	}
+	fmt.Println("\n******", addr, servers)
+	configuration := raft.Configuration{
+		Servers: servers,
+	}
+	ra.BootstrapCluster(configuration)
 
 	return nil
 }
