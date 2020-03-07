@@ -2,20 +2,18 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/nom3ad/pygoraftkv/store"
 )
 
 type PyGoRaftKV struct {
-	*store.Store
-	Quorum []store.Peer
+	*Store
+	Quorum []Peer
 }
 
-func New(quorum []store.Peer, myId string, raftDir string, inmem bool) (*PyGoRaftKV, error) {
+func New(quorum []Peer, myId string, raftDir string, inmem bool) (*PyGoRaftKV, error) {
 
-	s := store.New(inmem)
+	s := NewStore(inmem)
 	s.RaftDir = raftDir
-	var me store.Peer
+	var me Peer
 	for _, p := range quorum {
 		if p.ID == myId {
 			me = p

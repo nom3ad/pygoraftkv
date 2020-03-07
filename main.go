@@ -8,9 +8,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-
-	httpd "github.com/nom3ad/pygoraftkv/http"
-	"github.com/nom3ad/pygoraftkv/store"
 )
 
 // Command line parameters
@@ -30,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 	peerFile := "./config.json"
-	var peers []store.Peer
+	var peers []Peer
 	if data, err := ioutil.ReadFile(peerFile); err == nil {
 		json.Unmarshal(data, &peers)
 	} else {
@@ -49,7 +46,7 @@ func main() {
 		log.Fatalf("failed to open store: %s", err.Error())
 	}
 
-	h := httpd.New(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), pygokv.Store)
+	h := NewHttpd(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), pygokv.Store)
 	if err := h.Start(); err != nil {
 		log.Fatalf("failed to start HTTP service: %s", err.Error())
 	}

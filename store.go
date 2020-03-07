@@ -5,7 +5,7 @@
 //
 // Distributed consensus is provided via the Raft algorithm, specifically the
 // Hashicorp implementation.
-package store
+package main
 
 import (
 	"encoding/json"
@@ -54,7 +54,7 @@ type Store struct {
 }
 
 // New returns a new Store.
-func New(inmem bool) *Store {
+func NewStore(inmem bool) *Store {
 	return &Store{
 		m:      make(map[string]string),
 		inmem:  inmem,

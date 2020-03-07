@@ -1,6 +1,6 @@
 // Package httpd provides the HTTP server for accessing the distributed key-value store.
 // It also provides the endpoint for other nodes to join an existing cluster.
-package httpd
+package main
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 )
 
 // Store is the interface Raft-backed key-value stores must implement.
-type Store interface {
+type IStore interface {
 	// Get returns the value for the given key.
 	Get(key string) (string, error)
 
@@ -31,11 +31,11 @@ type Service struct {
 	addr string
 	ln   net.Listener
 
-	store Store
+	store IStore
 }
 
 // New returns an uninitialized HTTP service.
-func New(addr string, store Store) *Service {
+func NewHttpd(addr string, store IStore) *Service {
 	return &Service{
 		addr:  addr,
 		store: store,
