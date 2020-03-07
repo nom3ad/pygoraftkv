@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"encoding/json"
@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+
+	pygoraftkv "github.com/nom3ad/pygoraftkv/core"
 )
 
 // Command line parameters
@@ -27,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 	peerFile := "./config.json"
-	var peers []Peer
+	var peers []pygoraftkv.Peer
 	if data, err := ioutil.ReadFile(peerFile); err == nil {
 		json.Unmarshal(data, &peers)
 	} else {
@@ -41,12 +43,12 @@ func main() {
 	}
 	os.MkdirAll(raftDir, 0700)
 
-	pygokv, err := New(peers, peers[nodeID-1].ID, raftDir, inmem)
+	pygokv, err := pygoraftkv.New(peers, peers[nodeID-1].ID, raftDir, inmem)
 	if err != nil {
 		log.Fatalf("failed to open store: %s", err.Error())
 	}
 
-	h := NewHttpd(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), pygokv.Store)
+	h := pygoraftkv.NewHttpd(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), pygokv.Store)
 	if err := h.Start(); err != nil {
 		log.Fatalf("failed to start HTTP service: %s", err.Error())
 	}

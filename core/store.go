@@ -5,7 +5,7 @@
 //
 // Distributed consensus is provided via the Raft algorithm, specifically the
 // Hashicorp implementation.
-package main
+package core
 
 import (
 	"encoding/json"

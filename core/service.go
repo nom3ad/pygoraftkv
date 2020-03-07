@@ -1,6 +1,6 @@
 // Package httpd provides the HTTP server for accessing the distributed key-value store.
 // It also provides the endpoint for other nodes to join an existing cluster.
-package main
+package core
 
 import (
 	"encoding/json"
