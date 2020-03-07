@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 
-	pygoraftkv "github.com/nom3ad/pygoraftkv/core"
+	"github.com/nom3ad/pygoraftkv/pygoraftkv"
 )
 
 // Command line parameters
