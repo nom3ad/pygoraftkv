@@ -9,8 +9,8 @@ import (
 	"os"
 	"os/signal"
 
-	httpd "github.com/otoolep/hraftd/http"
-	"github.com/otoolep/hraftd/store"
+	"github.com/nom3ad/pygoraftkv/httpd"
+	"github.com/nom3ad/pygoraftkv/store"
 )
 
 // Command line parameters

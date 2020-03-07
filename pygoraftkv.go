@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/otoolep/hraftd/store"
+	"github.com/nom3ad/pygoraftkv/store"
 )
 
 type PyGoRaftKV struct {
