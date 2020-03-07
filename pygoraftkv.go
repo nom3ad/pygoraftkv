@@ -15,7 +15,6 @@ func New(quorum []store.Peer, myId string, raftDir string, inmem bool) (*PyGoRaf
 
 	s := store.New(inmem)
 	s.RaftDir = raftDir
-	s.RaftBind = fmt.Sprintf("%s:%d", quorum[nodeID-1].Host, quorum[nodeID-1].Port)
 	var me store.Peer
 	for _, p := range quorum {
 		if p.ID == myId {
@@ -26,6 +25,7 @@ func New(quorum []store.Peer, myId string, raftDir string, inmem bool) (*PyGoRaf
 	if me.ID != myId {
 		return nil, fmt.Errorf("self ID: %s is not found in quorum", myId)
 	}
+	s.RaftBind = fmt.Sprintf("%s:%d", me.Host, me.Port)
 	if err := s.Open(myId, quorum); err != nil {
 		return nil, err
 	}
