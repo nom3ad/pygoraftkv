@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/nom3ad/pygoraftkv/httpd"
+	httpd "github.com/nom3ad/pygoraftkv/http"
 	"github.com/nom3ad/pygoraftkv/store"
 )
 
