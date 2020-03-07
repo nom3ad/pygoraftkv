@@ -44,14 +44,12 @@ func main() {
 	}
 	os.MkdirAll(raftDir, 0700)
 
-	s := store.New(inmem)
-	s.RaftDir = raftDir
-	s.RaftBind = fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port)
-	if err := s.Open(peers[nodeID-1].ID, peers); err != nil {
+	pygokv, err := New(peers, peers[nodeID-1].ID, raftDir, inmem)
+	if err != nil {
 		log.Fatalf("failed to open store: %s", err.Error())
 	}
 
-	h := httpd.New(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), s)
+	h := httpd.New(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), pygokv.Store)
 	if err := h.Start(); err != nil {
 		log.Fatalf("failed to start HTTP service: %s", err.Error())
 	}
@@ -63,17 +61,3 @@ func main() {
 	<-terminate
 	log.Println("hraftd exiting")
 }
-
-// func join(joinAddr, raftAddr, nodeID string) error {
-// 	b, err := json.Marshal(map[string]string{"addr": raftAddr, "id": nodeID})
-// 	if err != nil {
-// 		return err
-// 	}
-// 	resp, err := http.Post(fmt.Sprintf("http://%s/join", joinAddr), "application-type/json", bytes.NewReader(b))
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer resp.Body.Close()
-
-// 	return nil
-// }
