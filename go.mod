@@ -1,4 +1,4 @@
-module github.com/otoolep/hraftd
+module github.com/nom3ad/pygoraftkv
 
 go 1.13
 
