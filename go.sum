@@ -8,6 +8,7 @@ github.com/circonus-labs/circonus-gometrics v2.3.1+incompatible/go.mod h1:nmEj6D
 github.com/circonus-labs/circonusllhist v0.1.3/go.mod h1:kMXHVDlOchFAehlya5ePtbp5jckzBHf4XRpQvBOLI+I=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/go-python/gopy v0.3.1 h1:l0zBAjU89xGoFBR12NTK+JGj6O2dCqRB/rDTN44APBY=
 github.com/go-python/gopy v0.3.1/go.mod h1:gQ2Itc84itA1AjrVqnMnv7HLkfmNObRXlR1co7CXpbk=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/gonuts/commander v0.1.0/go.mod h1:qkb5mSlcWodYgo7vs8ulLnXhfinhZsZcm6+H/z1JjgY=
