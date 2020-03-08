@@ -110,7 +110,7 @@ func main() {
 				panic(err)
 			}
 			if val, err := pygokv.Get(strconv.Itoa(k - 1)); err != nil {
-				fmt.Println("GET-ERROR:", k-1, err)
+				fmt.Printf("GET-ERROR: %d: err=%v\n", k-1, err.Error())
 			} else {
 				fmt.Printf("Value of %d = %s\n", k-1, val)
 			}

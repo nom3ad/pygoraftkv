@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	msgpack "github.com/msgpack/msgpack-go"
+	"github.com/ugorji/go/codec"
 )
 
 type Session struct {
@@ -125,55 +126,34 @@ func SendRequestMessage(writer io.Writer, msgId int, funcName string, arguments 
 // This is a low-level function that is not supposed to be called directly
 // by the user.  Change this if the MessagePack protocol is updated.
 func ReceiveResponse(reader io.Reader) (int, reflect.Value, error) {
-	data, _, err := msgpack.UnpackReflected(reader)
-	if err != nil {
-		return 0, reflect.Value{}, errors.New("Error occurred while receiving a response")
-	}
-
-	msgId, result, err := HandleRPCResponse(data)
+	msgId, result, err := _ReceiveResponse(reader)
 	if err != nil {
 		return 0, reflect.Value{}, err
 	}
-	return msgId, result, nil
+	return int(msgId), reflect.ValueOf(result), nil
 }
 
-// This is a low-level function that is not supposed to be called directly
-// by the user.  Change this if the MessagePack protocol is updated.
-func HandleRPCResponse(req reflect.Value) (int, reflect.Value, error) {
-	for {
-		_req, ok := req.Interface().([]reflect.Value)
-		if !ok {
-			break
-		}
-		if len(_req) != 4 {
-			break
-		}
-		msgType := _req[0]
-		typeOk := msgType.Kind() == reflect.Int || msgType.Kind() == reflect.Int8 || msgType.Kind() == reflect.Int16 || msgType.Kind() == reflect.Int32 || msgType.Kind() == reflect.Int64
-		if !typeOk {
-			break
-		}
-		msgId := _req[1]
-		if msgId.Kind() != reflect.Int && msgId.Kind() != reflect.Int8 && msgId.Kind() != reflect.Int16 && msgId.Kind() != reflect.Int32 && msgId.Kind() != reflect.Int64 {
-			break
-		}
-		if _req[2].IsValid() {
-			_errorMsg := _req[2]
-			if _errorMsg.Kind() != reflect.Array && _errorMsg.Kind() != reflect.Slice {
-				break
-			}
-			errorMsg, ok := _errorMsg.Interface().([]uint8)
-			if !ok {
-				break
-			}
-			if msgType.Int() != RESPONSE {
-				break
-			}
-			if errorMsg != nil {
-				return int(msgId.Int()), reflect.Value{}, errors.New(string(errorMsg))
-			}
-		}
-		return int(msgId.Int()), _req[3], nil
+func _ReceiveResponse(reader io.Reader) (msgId uint64, result interface{}, err error) {
+	var h codec.Handle = new(codec.MsgpackHandle)
+	var dec *codec.Decoder = codec.NewDecoder(reader, h)
+	var iface []interface{}
+	dec.Decode(&iface)
+	if len(iface) != 4 {
+		return 0, nil, fmt.Errorf("Invalid message. Not enough content")
 	}
-	return 0, reflect.Value{}, errors.New("Invalid message format")
+	if msgType, ok := iface[0].(int64); !ok {
+		return 0, nil, fmt.Errorf("Invalid message Type: %T : %v", iface[0], iface[0])
+	} else {
+		if msgType != RESPONSE {
+			return 0, nil, fmt.Errorf("Non-Respsonse message Type: %v", msgType)
+		}
+	}
+	var ok bool
+	if msgId, ok = iface[1].(uint64); !ok {
+		return 0, nil, fmt.Errorf("Invalid message Id: %T :  %v", iface[1], iface[1])
+	}
+	if iface[3] != nil {
+		err = fmt.Errorf("%v", string(iface[3].([]byte)))
+	}
+	return msgId, iface[2], err
 }
