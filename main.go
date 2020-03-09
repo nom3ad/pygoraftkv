@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -19,37 +17,30 @@ import (
 
 // Command line parameters
 var inmem bool
-var nodeID int
-
-func init() {
-	flag.BoolVar(&inmem, "inmem", false, "Use in-memory storage for Raft")
-	flag.IntVar(&nodeID, "id", -1, "Node ID")
-}
 
 func main() {
-	flag.Parse()
-
-	if flag.NArg() == 0 {
-		fmt.Fprintf(os.Stderr, "No Raft storage directory specified\n")
-		os.Exit(1)
-	}
-	peerFile := "./config-single.json"
 	var quorum []pygoraftkv.Member
-	if data, err := ioutil.ReadFile(peerFile); err == nil {
-		json.Unmarshal(data, &quorum)
-	} else {
-		panic(err)
+	raftDir := os.Getenv("PGRKV_RAFTDIR")
+	addr := os.Getenv("PGRKV_BRIDGE_ADDR")
+	quorumData := os.Getenv("PGRKV_QUORUM")
+	myId := os.Getenv("PGRKV_MYID")
+	if raftDir == "" || addr == "" || quorumData == "" || myId == "" {
+		log.Fatalln("Envoronement not set")
+	}
+	if err := json.Unmarshal([]byte(quorumData), &quorum); err != nil {
+		log.Fatalln("Unmarshal failed")
 	}
 	// Ensure Raft storage exists.
-	raftDir := flag.Arg(0)
 	if raftDir == "" {
-		fmt.Fprintf(os.Stderr, "No Raft storage directory specified\n")
-		os.Exit(1)
+		log.Fatalln("No Raft storage directory specified")
 	}
-	os.MkdirAll(raftDir, 0700)
-	conn, err := net.Dial("tcp", "127.0.0.1:50000")
+	if err := os.MkdirAll(raftDir, 0700); err != nil {
+		log.Fatalln("Mkdir failed : Raft storage directory")
+	}
+	// conn, err := net.Dial("tcp", "127.0.0.1:50000")
+	conn, err := net.Dial("unix", addr)
 	if err != nil {
-		log.Fatalf("failed to dial rpc client: %s", err.Error())
+		log.Fatalf("failed to dial rpc client: %s\n", err.Error())
 		return
 	}
 
@@ -79,12 +70,14 @@ func main() {
 		}
 		return nil
 	}
-	pygokv, err := pygoraftkv.NewPyGoKV(quorum, quorum[nodeID-1].ID, raftDir, inmem, getter, setter, deleter)
+	pygokv, err := pygoraftkv.NewPyGoKV(quorum, myId, raftDir, inmem, getter, setter, deleter)
 	if err != nil {
+		log.Fatalf("failed to creare store: %s", err.Error())
+	}
+	fut, err := pygokv.Open()
+	if err != nil || fut.Error() != nil {
 		log.Fatalf("failed to open store: %s", err.Error())
 	}
-
-	pygokv.Open()
 
 	// h := pygoraftkv.NewHttpd(fmt.Sprintf("%s:%d", peers[nodeID-1].Host, peers[nodeID-1].Port+6000), pygokv.Store)
 	// if err := h.Start(); err != nil {
