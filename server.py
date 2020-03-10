@@ -77,10 +77,8 @@ def run(myid, quorum, raftdir):
     
     server = StreamServer(listener, BridgeServer())
 
-    server_g = gevent.spawn(server.serve_forever)
-    register(server_g)
-    process_g = gevent.spawn(run_subprocess, sockname, myid, quorum, raftdir)
-    register(process_g)
+    register(gevent.spawn(server.serve_forever))
+    # register(gevent.spawn(run_subprocess, sockname, myid, quorum, raftdir))
     
     gevent.joinall(greenlets)
 

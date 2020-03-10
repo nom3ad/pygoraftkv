@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strconv"
 
 	msgpack "github.com/msgpack/msgpack-go"
 	"github.com/ugorji/go/codec"
@@ -133,7 +134,7 @@ func ReceiveResponse(reader io.Reader) (int, reflect.Value, error) {
 	return int(msgId), reflect.ValueOf(result), nil
 }
 
-func _ReceiveResponse(reader io.Reader) (msgId uint64, result interface{}, err error) {
+func _ReceiveResponse(reader io.Reader) (msgId int, result interface{}, err error) {
 	var h codec.Handle = new(codec.MsgpackHandle)
 	var dec *codec.Decoder = codec.NewDecoder(reader, h)
 	var iface []interface{}
@@ -141,15 +142,14 @@ func _ReceiveResponse(reader io.Reader) (msgId uint64, result interface{}, err e
 	if len(iface) != 4 {
 		return 0, nil, fmt.Errorf("Invalid message. Not enough content")
 	}
-	if msgType, ok := iface[0].(int64); !ok {
-		return 0, nil, fmt.Errorf("Invalid message Type: %T : %v", iface[0], iface[0])
+	if msgType, err := strconv.Atoi(fmt.Sprint(iface[0])); err != nil {
+		return 0, nil, fmt.Errorf("Invalid message Type: %T : %v: %v", iface[0], iface[0], err)
 	} else {
 		if msgType != RESPONSE {
 			return 0, nil, fmt.Errorf("Non-Respsonse message Type: %v", msgType)
 		}
 	}
-	var ok bool
-	if msgId, ok = iface[1].(uint64); !ok {
+	if msgId, err = strconv.Atoi(fmt.Sprint(iface[1])); err != nil {
 		return 0, nil, fmt.Errorf("Invalid message Id: %T :  %v", iface[1], iface[1])
 	}
 	if iface[3] != nil {
